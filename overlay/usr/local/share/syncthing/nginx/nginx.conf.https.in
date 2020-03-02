@@ -1,0 +1,38 @@
+# @@TEMPLATE@@
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  server {
+    listen 80 default_server;
+    server_name _;
+
+    return 301 https://$host$request_uri;
+  }
+
+  server {
+    listen 443 ssl;
+    server_name localhost;
+
+    ssl_certificate      cert.pem;
+    ssl_certificate_key  key.pem;
+
+    ssl_session_cache    shared:SSL:1m;
+    ssl_session_timeout  5m;
+
+    location / {
+      # https://docs.syncthing.net/users/faq.html#why-do-i-get-host-check-error-in-the-gui-api
+      proxy_set_header Host localhost;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+
+      proxy_pass http://127.0.0.1:8384/;
+
+      proxy_read_timeout 600s;
+      proxy_send_timeout 600s;
+    }
+  }
+}
